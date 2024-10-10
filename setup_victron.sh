@@ -10,7 +10,7 @@ is_valid_version() {
 }
 
 # Try to fetch the latest Tailscale version from the website
-LATEST_VERSION=$(curl -s https://pkgs.tailscalexxx.com/stable/#static | grep -o 'tailscale_[^"]*arm.tgz' | head -n 1 | sed 's/tailscale_//; s/_arm.tgz//')
+LATEST_VERSION=$(curl -s https://pkgs.tailscale.com/stable/#static | grep -o 'tailscale_[^"]*arm.tgz' | head -n 1 | sed 's/tailscale_//; s/_arm.tgz//')
 
 # Validate the fetched version, fallback if invalid
 if [ -z "$LATEST_VERSION" ] || ! is_valid_version "$LATEST_VERSION"; then
