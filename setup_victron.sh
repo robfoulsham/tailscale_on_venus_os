@@ -1,10 +1,31 @@
 #!/bin/bash
 
-# change this variable to match the tailescale latest version
-TAILSCALE_VERSION="1.62.0"
-TAILSCALE_TGZ="tailscale_""$TAILSCALE_VERSION""_arm.tgz"
-
 clear
+
+FALLBACK_VERSION="1.74.1"
+
+# Function to validate the version format
+is_valid_version() {
+  [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+# Try to fetch the latest Tailscale version from the website
+LATEST_VERSION=$(curl -s https://pkgs.tailscale.com/stable/#static | grep -o 'tailscale_[^"]*arm.tgz' | head -n 1 | sed 's/tailscale_//; s/_arm.tgz//')
+
+# Validate the fetched version, fallback if invalid
+if [ -z "$LATEST_VERSION" ] || ! is_valid_version "$LATEST_VERSION"; then
+  echo "Failed to fetch a valid version, falling back to hardcoded version. Please notify repo maintainer."
+  TAILSCALE_VERSION="$FALLBACK_VERSION"
+else
+  TAILSCALE_VERSION="$LATEST_VERSION"
+fi
+
+# Set the TGZ filename
+TAILSCALE_TGZ="tailscale_${TAILSCALE_VERSION}_arm.tgz"
+
+# Output the selected version and TGZ filename
+echo "Installing Tailscale version: $TAILSCALE_VERSION"
+echo "Tailscale TGZ filename: $TAILSCALE_TGZ"
 
 #
 # move into home directory of the user root.
@@ -12,13 +33,8 @@ clear
 echo "move into home directory of the user root."
 echo ""
 cd /home/root
-echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # download the latest tailscale package.
@@ -30,10 +46,7 @@ echo "done."
 echo ""
 sleep 1
 echo $TAILSCALE_TGZ
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
+
 
 #
 # uncompress the package.
@@ -44,10 +57,6 @@ tar -xvf tailscale_loc.tgz
 echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # copy the nessesary files to /usr/bin.
@@ -58,24 +67,16 @@ cp /home/root/tailscale_"$TAILSCALE_VERSION"_arm/tailscale /home/root/tailscale_
 echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # copy the nessesary file to /etc/init.d.
 #
 echo "copy the nessesary file to /etc/init.d."
 echo ""
-cp /home/root/tailscale_on_venus_os-master/etc/init.d/tailscaled /etc/init.d/
+curl -o /etc/init.d/tailscaled https://raw.githubusercontent.com/mcfrojd/tailscale_on_venus_os/master/etc/init.d/tailscaled
 echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # make init script executable
@@ -86,10 +87,6 @@ chmod +x /etc/init.d/tailscaled
 echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # test the init script
@@ -102,10 +99,6 @@ echo ""
 echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # configure tailscale init script to start automatically on boot
@@ -115,25 +108,22 @@ echo ""
 update-rc.d tailscaled defaults
 echo "done."
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
 
 #
 # enable ip-forward
 #
 echo "enable ip-forward"
 echo ""
-echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
-echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.conf
+echo 'net.ipv4.ip_forward = 1' | tee -a /etc/sysctl.conf
+echo 'net.ipv6.conf.all.forwarding = 1' | tee -a /etc/sysctl.conf
 echo "done."
 echo ""
 sleep 1
-echo "press any key to continue"
-echo ""
-read -s -n 1
-clear
+
+# cleanup downloaded files
+echo "cleaning up files"
+rm -r /home/root/tailscale*
+rm /home/root/setup_victron.sh
 
 #
 # connect to your tailscale account
@@ -144,7 +134,8 @@ echo ""
 echo 'run "tailscale up -ssh --advertise-routes=192.168.77.0/24"'
 
 #
-# if there was no errors, tailscale should be installed and ready!
+# if there were no errors, tailscale should be installed and ready!
 #
-echo "if there was no errors, tailscale should be installed and ready!"
+echo "if there were no errors, tailscale should be installed and ready!"
 echo ""
+
