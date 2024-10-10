@@ -1,10 +1,31 @@
 #!/bin/bash
 
-# change this variable to match the tailescale latest version
-TAILSCALE_VERSION="1.62.0"
-TAILSCALE_TGZ="tailscale_""$TAILSCALE_VERSION""_arm.tgz"
-
 clear
+
+FALLBACK_VERSION="1.74.1"
+
+# Function to validate the version format
+is_valid_version() {
+  [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+# Try to fetch the latest Tailscale version from the website
+LATEST_VERSION=$(curl -s https://pkgs.tailscalexxx.com/stable/#static | grep -o 'tailscale_[^"]*arm.tgz' | head -n 1 | sed 's/tailscale_//; s/_arm.tgz//')
+
+# Validate the fetched version, fallback if invalid
+if [ -z "$LATEST_VERSION" ] || ! is_valid_version "$LATEST_VERSION"; then
+  echo "Failed to fetch a valid version, falling back to hardcoded version. Please notify repo maintainer."
+  TAILSCALE_VERSION="$FALLBACK_VERSION"
+else
+  TAILSCALE_VERSION="$LATEST_VERSION"
+fi
+
+# Set the TGZ filename
+TAILSCALE_TGZ="tailscale_${TAILSCALE_VERSION}_arm.tgz"
+
+# Output the selected version and TGZ filename
+echo "Installing Tailscale version: $TAILSCALE_VERSION"
+echo "Tailscale TGZ filename: $TAILSCALE_TGZ"
 
 #
 # move into home directory of the user root.
@@ -68,7 +89,7 @@ clear
 #
 echo "copy the nessesary file to /etc/init.d."
 echo ""
-cp /home/root/tailscale_on_venus_os-master/etc/init.d/tailscaled /etc/init.d/
+sudo curl -o /etc/init.d/tailscaled https://raw.githubusercontent.com/mcfrojd/tailscale_on_venus_os/master/etc/init.d/tailscaled
 echo "done."
 echo ""
 sleep 1
