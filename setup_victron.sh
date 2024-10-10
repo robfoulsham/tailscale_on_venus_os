@@ -89,7 +89,7 @@ clear
 #
 echo "copy the nessesary file to /etc/init.d."
 echo ""
-sudo curl -o /etc/init.d/tailscaled https://raw.githubusercontent.com/mcfrojd/tailscale_on_venus_os/master/etc/init.d/tailscaled
+curl -o /etc/init.d/tailscaled https://raw.githubusercontent.com/mcfrojd/tailscale_on_venus_os/master/etc/init.d/tailscaled
 echo "done."
 echo ""
 sleep 1
